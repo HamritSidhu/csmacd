@@ -19,6 +19,7 @@ def p_persistent_csmacd(p, nodes):
 						# go ahead and transmit
 						n.state = model.State.Transmitting
 						n.beginPacketTransmission(i)
+						transmitting_nodes.append(n)
 					else:
 						# Defer Transmission
 						n.state = model.State.Defer
@@ -45,15 +46,11 @@ def p_persistent_csmacd(p, nodes):
 				if n.state == model.State.Idle:
 					print "transmission complete"
 					completed_packets.append(transmittingPacket)
+					transmitting_nodes.remove(n)
 
 			else:
 				# do nothing if packet in idle state
 				pass
-
-		transmitting_nodes = []
-		for n in nodes:
-			if n.state == model.State.Transmitting:
-				transmitting_nodes.append(n)
 
 		collision = detectCollision(transmitting_nodes, i)
 
@@ -62,6 +59,8 @@ def p_persistent_csmacd(p, nodes):
 		if collision:
 			for n in nodes:
 				n.state = model.State.ExponentialBackoff
+
+			transmitting_nodes = []
 	
 	print len(completed_packets)
 	if len(completed_packets) > 0:
@@ -96,7 +95,6 @@ def detectCollision(tNodes, currentTick):
 
 
 def isMediumFree(tNodes, currentNode, currentTick):
-	print tNodes
  	for tNode in tNodes:
  		propagationDelay = getPropagationDelay(tNode, currentNode)
  		processTime = currentTick - tNode.currentServicePacket.startTick
