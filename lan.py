@@ -7,9 +7,10 @@ TICKS = 100000000
 
 def p_persistent_csmacd(p, nodes):
 	completed_packets = []
+	transmitting_nodes = []
 	for i in range(0, TICKS):
-		mediumFree = isMediumFree(nodes)  
 		for n in nodes:
+			mediumFree = isMediumFree(transmitting_nodes, n, i)
 			n.process_queue(i) # handles the packet arrivals to Node's MD1 queue
 			if n.state == model.State.ReadyToTransmit:
 				if mediumFree:
@@ -83,32 +84,33 @@ def p_persistent_csmacd(p, nodes):
 	
 def detectCollision(tNodes, currentTick):
 	for k in range(0, len(tNodes) - 1):
-		propDelay = (tNodes[k].position - tNodes[k+1].position)*10.0/(2*10^8)/tickDuration
+		propDelay = getPropagationDelay(tNodes[k], tNodes[k+1])
 
-		if (currentTick - tNodes[k].currentServicePacket.startTick) >= propDelay:
-			print "collision"
+		pTime1 = currentTick - tNodes[k].currentServicePacket.startTick
+		pTime2 = currentTick - tNodes[k+1].currentServicePacket.startTick
+
+		if isProcessingTimeLongerThanPropogationDelay(propDelay, pTime1) or isProcessingTimeLongerThanPropogationDelay(propDelay, pTime2):
 			return True
-			
-
 	# no collision was detected
 	return False
 
 
 def isMediumFree(tNodes, currentNode, currentTick):
+	print tNodes
  	for tNode in tNodes:
  		propagationDelay = getPropagationDelay(tNode, currentNode)
  		processTime = currentTick - tNode.currentServicePacket.startTick
- 		if isProcessingTimeLongerThanPropogationDelay(propagationDelay, processingTime)
+ 		if isProcessingTimeLongerThanPropogationDelay(propagationDelay, processTime):
   			return False
   
   	return True
 
- def isProcessingTimeLongerThanPropogationDelay(propagationDelay, processingTime):
+def isProcessingTimeLongerThanPropogationDelay(propagationDelay, processingTime):
  	return processingTime >= propagationDelay # let's check the equal sign condition!!!!
  
 
- def getPropagationDelay(node1, node2):
- 	return math.abs((node2.position - node1.position)*10.0/(2*10^8)/tickDuration)
+def getPropagationDelay(node1, node2):
+ 	return abs((node2.position - node1.position)*10.0/(2*10^8)/tickDuration)
 
 
 def InitializeNodes(A, N, W, L):
