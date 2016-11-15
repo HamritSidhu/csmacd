@@ -94,12 +94,22 @@ def detectCollision(tNodes, currentTick):
 	return False
 
 
-def isMediumFree(nodes):
-	for n in nodes:
-		if n.state == model.State.Transmitting:
-			return False
+def isMediumFree(tNodes, currentNode, currentTick):
+ 	for tNode in tNodes:
+ 		propagationDelay = getPropagationDelay(tNode, currentNode)
+ 		processTime = currentTick - tNode.currentServicePacket.startTick
+ 		if isProcessingTimeLongerThanPropogationDelay(propagationDelay, processingTime)
+  			return False
+  
+  	return True
 
-	return True
+ def isProcessingTimeLongerThanPropogationDelay(propagationDelay, processingTime):
+ 	return processingTime >= propagationDelay # let's check the equal sign condition!!!!
+ 
+
+ def getPropagationDelay(node1, node2):
+ 	return math.abs((node2.position - node1.position)*10.0/(2*10^8)/tickDuration)
+
 
 def InitializeNodes(A, N, W, L):
 	nodeList = []
