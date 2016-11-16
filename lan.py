@@ -89,6 +89,7 @@ def detectCollision(tNodes, currentTick):
 		pTime2 = currentTick - tNodes[k+1].currentServicePacket.startTick
 
 		if isProcessingTimeLongerThanPropogationDelay(propDelay, pTime1) or isProcessingTimeLongerThanPropogationDelay(propDelay, pTime2):
+			print "collision"
 			return True
 	# no collision was detected
 	return False
@@ -121,7 +122,7 @@ def InitializeNodes(A, N, W, L):
 
 def main():
 	N = 30
-	W = 1*10^6
+	W = 1000000
 	L = 1500*8
 	As = [10]
 
