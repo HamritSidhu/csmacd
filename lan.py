@@ -15,7 +15,7 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
 			if n.state == model.State.ReadyToTransmit:
 				if mediumFree:
 					pOutcome = random.uniform(0,1)
-					if pOutcome < p:
+					if pOutcome < p || non_persistent:
 						# go ahead and transmit
 						n.state = model.State.Transmitting
 						n.beginPacketTransmission(i)
