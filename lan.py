@@ -2,10 +2,10 @@ import model
 import math
 import random
 
-tickDuration = 0.0001
-TICKS = 100000000
+tickDuration = 0.00000001
+TICKS = 1000000000
 
-def p_persistent_csmacd(p, nodes):
+def p_persistent_csmacd(p, nodes, non_persistent=False):
 	completed_packets = []
 	transmitting_nodes = []
 	for i in range(0, TICKS):
@@ -24,6 +24,9 @@ def p_persistent_csmacd(p, nodes):
 						# Defer Transmission
 						n.state = model.State.Defer
 						n.waitDuration = 5 # default to 5 ticks - confirm if this is ok
+				else:
+					if non_persistent:
+						n.state = model.State.ExponentialBackoff
 			elif n.state == model.State.Defer:
 				if n.waitDuration == 0:
 					if mediumFree:
@@ -44,7 +47,7 @@ def p_persistent_csmacd(p, nodes):
 
 				#transmission complete
 				if n.state == model.State.Idle:
-					print "transmission complete"
+					# print "transmission complete"
 					completed_packets.append(transmittingPacket)
 					transmitting_nodes.remove(n)
 
@@ -121,6 +124,11 @@ def InitializeNodes(A, N, W, L):
 	return nodeList
 
 def main():
+	p_persistent()
+	non_persistent()
+	#tests()
+
+def p_persistent():
 	N = 30
 	W = 1000000
 	L = 1500*8
@@ -137,7 +145,21 @@ def main():
 			p_persistent_csmacd(p, nodes)
 
 	print "Complete"
-	#tests()
+
+def non_persistent():
+	Ns = [20, 40, 60, 80, 100]
+	W = 1000000
+	L = 1500*8
+	As = [6, 20]
+
+	for n in Ns:
+		nodes = InitializeNodes(a, n, W, L)
+		for a in As:
+			print "N=%s"%n
+			print "A=%s"%a
+			p_persistent_csmacd(1, nodes, True)
+
+	print "Complete"
 
 def tests():
 	W = 1*1000000

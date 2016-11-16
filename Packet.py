@@ -11,6 +11,5 @@ class Packet:
     def process(self, currentTick, serviceTime):
         processTime = currentTick - self.startTick
         if processTime >= serviceTime:
-            print "here"
             self.hasLeft = True
             self.completionTime = currentTick - self.createTick

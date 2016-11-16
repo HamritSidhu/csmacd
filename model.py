@@ -96,7 +96,7 @@ class Node:
     def transmit(self, currentTick):
         if self.currentServicePacket.hasLeft:
             # packet complete
-            print "packet complete"
+            # print "packet complete"
             self.currentServicePacket = None
             self.state = State.Idle
             self.exponentialBackOff.reset()
