@@ -2,6 +2,7 @@ import MD1Queue
 import RandomGenerator
 import random
 import Packet
+import math
 from enum import Enum
 
 class State(Enum):
@@ -20,7 +21,7 @@ class BinaryExponentialBackoff:
         self.isWaiting = False
 
     def beginBackoffIteration(self):
-        R = random.randint(0, (2^self.iteration)-1)
+        R = random.randint(0, (math.pow(2, self.iteration))-1)
         self.Tb = int(round(R*self.Tp))
         self.isWaiting = True
 

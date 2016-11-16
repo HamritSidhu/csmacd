@@ -140,7 +140,7 @@ def main():
 	#tests()
 
 def tests():
-	W = 1*10^6
+	W = 1*1000000
 	L = 1500*8
 	A = 10
 
