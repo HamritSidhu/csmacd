@@ -44,13 +44,13 @@ class BinaryExponentialBackoff:
     def reset(self):
         self.iteration = 0
 
-    
+
 class Node:
     def __init__(self, position, A, L, W, tickDuration):
         self.position = position
         self.state = State.Idle
         self.arrivalRate = A
-        self.nextArrivalTick = 0
+        self.nextArrivalTick = RandomGenerator.randomExponential(A, tickDuration)
         self.currentServicePacket = None
         self.serviceTime = L*1.0/W/tickDuration
         self.tickDuration = tickDuration
