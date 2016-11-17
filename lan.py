@@ -1,9 +1,10 @@
 import model
 import math
 import random
+import multiprocessing
 
-tickDuration = 0.00000001
-TICKS = 100000000
+tickDuration = 0.00000005
+TICKS = 200000000
 
 def p_persistent_csmacd(p, nodes, non_persistent=False):
     collision_count = 0
@@ -21,7 +22,7 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
             if n.state == model.State.ReadyToTransmit:
                 if mediumFree:
                     pOutcome = random.uniform(0, 1)
-                    if pOutcome <= p:
+                    if pOutcome < p or p is 1:
                         # go ahead and transmit
                         n.state = model.State.Transmitting
                         n.beginPacketTransmission(i)
@@ -66,7 +67,7 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
         # if there is a collision, we want to put all the transmitting nodes
         # in exponential backoff
         if collision:
-            for n in nodes:
+            for n in transmitting_nodes:
                 n.state = model.State.ExponentialBackoff
 
             collision_count += 1
@@ -94,9 +95,13 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
 def detectCollision(tNodes, currentTick):
     for k in range(0, len(tNodes) - 1):
         propDelay = getPropagationDelay(tNodes[k], tNodes[k + 1])
+        print "Propagation Delay: %s" % propDelay
 
         pTime1 = currentTick - tNodes[k].currentServicePacket.startTick
         pTime2 = currentTick - tNodes[k + 1].currentServicePacket.startTick
+
+        print "processing time node 1: %s" % pTime1
+        print "processing time node 2: %s" % pTime2
 
         if isProcessingTimeLongerThanPropogationDelay(propDelay, pTime1) or isProcessingTimeLongerThanPropogationDelay(propDelay, pTime2):
             print "collision"
@@ -134,10 +139,24 @@ def InitializeNodes(A, N, W, L):
 
 
 def main():
-    non_persistent()
     p_persistent()
+    non_persistent()
     # tests()
 
+def non_persistent_pool():
+    params = [20, 40, 60, 80, 100]
+
+    p = multiprocessing.Pool(5)
+    p.map(non_persistent_call, params)
+
+
+def non_persistent_call(N):
+    W = 1000000
+    L = 1500 * 8
+    a = 6
+    nodes = InitializeNodes(a, N, W, L)
+    print "NON_PERSISTENT: N = %s, A = %s " % (N, a)
+    p_persistent_csmacd(1, nodes, True)
 
 def p_persistent():
     N = 30
