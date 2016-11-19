@@ -2,6 +2,7 @@ import model
 import math
 import random
 import multiprocessing
+import sys
 
 tickDuration = 0.00000005
 TICKS = 200000000
@@ -139,24 +140,26 @@ def InitializeNodes(A, N, W, L):
 
 
 def main():
-    p_persistent()
-    non_persistent()
+    non_persistent_pool()
+    # p_persistent()
     # tests()
 
 def non_persistent_pool():
-    params = [20, 40, 60, 80, 100]
+    params = [20, 40]
 
     p = multiprocessing.Pool(5)
     p.map(non_persistent_call, params)
 
 
 def non_persistent_call(N):
+    sys.stdout = open("Non_Persistent_%s.txt" % N, "w")
     W = 1000000
     L = 1500 * 8
     a = 6
     nodes = InitializeNodes(a, N, W, L)
     print "NON_PERSISTENT: N = %s, A = %s " % (N, a)
     p_persistent_csmacd(1, nodes, True)
+    sys.stdout.close()
 
 def p_persistent():
     N = 30
