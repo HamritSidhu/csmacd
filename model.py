@@ -22,7 +22,10 @@ class BinaryExponentialBackoff:
 
     def beginBackoffIteration(self):
         R = random.randint(0, (math.pow(2, self.iteration))-1)
+        if R is 0:
+            R = 1
         self.Tb = int(round(R*self.Tp))
+        # print "self Tb : %s" % self.Tb
         self.isWaiting = True
 
     def wait(self):

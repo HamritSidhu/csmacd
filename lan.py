@@ -23,7 +23,11 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
             if n.state == model.State.ReadyToTransmit:
                 if mediumFree:
                     pOutcome = random.uniform(0, 1)
+                    print pOutcome
+                    print pOutcome < p
                     if pOutcome < p or p is 1:
+                        # print "Overcome probability"
+                        # print "Node %s went through at tick %s" % (n.position, i)
                         # go ahead and transmit
                         n.state = model.State.Transmitting
                         n.beginPacketTransmission(i)
@@ -36,6 +40,7 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
                     if non_persistent:
                         n.state = model.State.ExponentialBackoff
             elif n.state == model.State.Defer:
+                # print "waiting for %s more ticks..." % n.waitDuration
                 if n.waitDuration == 0:
                     if mediumFree:
                         n.state = model.State.ReadyToTransmit
@@ -55,7 +60,7 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
 
                 # transmission complete
                 if n.state == model.State.Idle:
-                    # print "transmission complete"
+                    print "transmission complete"
                     completed_packets.append(transmittingPacket)
                     transmitting_nodes.remove(n)
 
@@ -96,13 +101,13 @@ def p_persistent_csmacd(p, nodes, non_persistent=False):
 def detectCollision(tNodes, currentTick):
     for k in range(0, len(tNodes) - 1):
         propDelay = getPropagationDelay(tNodes[k], tNodes[k + 1])
-        print "Propagation Delay: %s" % propDelay
+        # print "Propagation Delay: %s" % propDelay
 
         pTime1 = currentTick - tNodes[k].currentServicePacket.startTick
         pTime2 = currentTick - tNodes[k + 1].currentServicePacket.startTick
 
-        print "processing time node 1: %s" % pTime1
-        print "processing time node 2: %s" % pTime2
+        # print "processing time node 1: %s" % pTime1
+        # print "processing time node 2: %s" % pTime2
 
         if isProcessingTimeLongerThanPropogationDelay(propDelay, pTime1) or isProcessingTimeLongerThanPropogationDelay(propDelay, pTime2):
             print "collision"
@@ -140,12 +145,28 @@ def InitializeNodes(A, N, W, L):
 
 
 def main():
-    non_persistent_pool()
-    # p_persistent()
+    # non_persistent_pool()
+    p_persistent_pool()
     # tests()
 
+def p_persistent_pool():
+    params = [2 , 4]
+
+    p = multiprocessing.Pool(5)
+    p.map(p_persistent_call, params)
+
+def p_persistent_call(a):
+    sys.stdout = open("P_Persistent_%s_pac_sec.txt" % a, "w")
+    W = 1000000
+    L = 1500 * 8
+    N = 30
+    nodes = InitializeNodes(a, N, W, L)
+    print "P_PERSISTENT: N = %s, A = %s " % (N, a)
+    p_persistent_csmacd(1, nodes)
+    sys.stdout.close()
+
 def non_persistent_pool():
-    params = [20, 40]
+    params = [60]
 
     p = multiprocessing.Pool(5)
     p.map(non_persistent_call, params)
@@ -155,7 +176,7 @@ def non_persistent_call(N):
     sys.stdout = open("Non_Persistent_%s.txt" % N, "w")
     W = 1000000
     L = 1500 * 8
-    a = 6
+    a = 20
     nodes = InitializeNodes(a, N, W, L)
     print "NON_PERSISTENT: N = %s, A = %s " % (N, a)
     p_persistent_csmacd(1, nodes, True)
@@ -165,9 +186,9 @@ def p_persistent():
     N = 30
     W = 1000000
     L = 1500 * 8
-    As = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    As = [10]
 
-    Ps = [0.01, 0.1, 1]
+    Ps = [1]
 
     for a in As:
         print "A=%s" % a
@@ -193,95 +214,6 @@ def non_persistent():
             p_persistent_csmacd(1, nodes, True)
 
     print "Complete"
-
-
-def tests():
-    W = 1 * 1000000
-    L = 1500 * 8
-    A = 10
-
-    node1 = model.Node(1, A, L, W, tickDuration)
-    node2 = model.Node(2, A, L, W, tickDuration)
-
-    nodeList = [node1, node2]
-    mediumFree = isMediumFree(nodeList)
-    print mediumFree == True
-
-    node1.process_queue(0)
-    print node1.state == model.State.ReadyToTransmit
-
-    node2.process_queue(0)
-    print node2.state == model.State.ReadyToTransmit
-
-    print mediumFree == True
-
-    node1.process_queue(1)
-    node2.process_queue(1)
-
-    print node1.state == model.State.ReadyToTransmit
-    print node2.state == model.State.ReadyToTransmit
-
-    if mediumFree:
-        pOutcome = random.uniform(0, 1)
-        if pOutcome < 1:
-            # go ahead and transmit
-            node1.state = model.State.Transmitting
-            node1.beginPacketTransmission(1)
-        else:
-            # Defer Transmission
-            node1.state = model.State.Defer
-            node1.waitDuration = 5  # default
-
-    print node1.state
-
-    print node1.currentServicePacket.startTick
-    if node1.state == model.State.Transmitting:
-        node1.transmit(node1.serviceTime + 1)
-        print node1.currentServicePacket.hasLeft
-
-    mediumFree = isMediumFree(nodeList)
-    print mediumFree == False
-
-    if node1.state == model.State.Transmitting:
-        cpk = node1.currentServicePacket
-        node1.transmit(node1.serviceTime + 2)
-        print node1.state
-        print node1.currentServicePacket == None
-        print cpk.completionTime
-
-    node1.process_queue(node1.nextArrivalTick)
-    print node1.state == model.State.ReadyToTransmit
-
-    mediumFree = isMediumFree(nodeList)
-    print mediumFree == True
-
-    node1.beginPacketTransmission(10)
-    node2.beginPacketTransmission(10)
-
-    print node1.state == model.State.Transmitting
-    print node2.state == model.State.Transmitting
-
-    print detectCollision(nodeList, 10) == True
-
-    node1.state = model.State.ExponentialBackoff
-    node2.state = model.State.ExponentialBackoff
-    node1.backoffWait()
-    node2.backoffWait()
-
-    print node1.exponentialBackOff.isBackoffWaitComplete() == False
-    print node2.exponentialBackOff.isBackoffWaitComplete() == False
-
-    # for testing set it to small value
-    node1.exponentialBackOff.Tb = 10
-
-    for i in range(0, 10):
-        node1.backoffWait()
-
-    print node1.state == model.State.ExponentialBackoff
-    print node1.exponentialBackOff.isBackoffWaitComplete() == False
-
-    node1.backoffWait()
-    print node1.exponentialBackOff.isBackoffWaitComplete() == True
 
 
 if __name__ == '__main__':
